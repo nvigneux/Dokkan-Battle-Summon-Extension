@@ -1,0 +1,38 @@
+{
+  "short_name": "Dokkan Battle Summon Extension",
+  "name": "Dokkan Battle Summon Extension",
+  "description": "Chrome extension for better Dokkan Battle Summon Extension",
+  "version": "1.0",
+  "manifest_version": 3,
+  "icons": { "16": "logo192.png", "48": "logo192.png", "128": "logo192.png" },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "webRequest",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "*://dbz-dokkanbattle.com/*",
+    "*://dbz-dokkanbattle.com/summon/*"
+  ],
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Dokkan Battle Summon Extension"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://dbz-dokkanbattle.com/*",
+        "*://dbz-dokkanbattle.com/summon/*"
+      ],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
+  ]
+}
