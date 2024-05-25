@@ -5,7 +5,6 @@
  * @property {number} count - The count value.
  */
 const initStorage = {
-  count: 0,
   fetchedUrls: {},
   summonHistory: {
     featuredSSRs: {},
@@ -198,50 +197,37 @@ const buildNewSummonsStorage = (storage, result, summonType, summonAmount) => {
  * @param {Function} sendResponse - The response callback function.
  * @returns {boolean} - Whether the response callback function will be called asynchronously.
  */
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   switch (message.action) {
-    case 'USER_CLICKED':
-      chrome.storage.local.get().then((res) => {
-        const newRes = { ...initStorage, ...res, count: res.count += 1 };
-        sendResponse({ ...newRes });
-        sendTabsMessage({ action: 'BACKGROUND_UPDATE_COUNT', newRes });
-        chrome.storage.local.set({ ...newRes });
-      });
-      break;
-
     case 'USER_SINGLE_SUMMON': {
-      chrome.storage.local.get().then(async (res) => {
-        const { rates } = res.fetchedUrls[message.gashaId];
-        const summonRates = calculateRates(rates);
-        const cardsCategory = getCardsByCategory(res.fetchedUrls[message.gashaId]);
-        const result = summon(cardsCategory, summonRates);
+      const storage = await chrome.storage.local.get();
+      const { rates } = storage.fetchedUrls[message.gashaId];
+      const summonRates = calculateRates(rates);
+      const cardsCategory = getCardsByCategory(storage.fetchedUrls[message.gashaId]);
+      const result = summon(cardsCategory, summonRates);
 
-        const storage = await chrome.storage.local.get();
-        const newStorage = buildNewSummonsStorage(storage, [result], 'totalSingleSummons', 5);
-        await chrome.storage.local.set({ ...newStorage });
+      const newStorage = buildNewSummonsStorage(storage, [result], 'totalSingleSummons', 5);
+      await chrome.storage.local.set({ ...newStorage });
 
-        sendResponse({ result: [result] });
-        sendTabsMessage({ action: 'BACKGROUND_SINGLE_SUMMON', result: [result] });
-        sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', newStorage });
-      });
+      sendResponse({ result: [result] });
+      sendTabsMessage({ action: 'BACKGROUND_SINGLE_SUMMON', result: [result] });
+      sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', newStorage });
       break;
     }
 
     case 'USER_MULTI_SUMMON': {
-      chrome.storage.local.get().then(async (res) => {
-        const { rates } = res.fetchedUrls[message.gashaId];
-        const summonRates = calculateRates(rates);
-        const cardsCategory = getCardsByCategory(res.fetchedUrls[message.gashaId]);
-        const result = multiSummon(cardsCategory, summonRates);
+      const storage = await chrome.storage.local.get();
+      const { rates } = storage.fetchedUrls[message.gashaId];
+      const summonRates = calculateRates(rates);
+      const cardsCategory = getCardsByCategory(storage.fetchedUrls[message.gashaId]);
+      const result = multiSummon(cardsCategory, summonRates);
 
-        const storage = await chrome.storage.local.get();
-        const newStorage = buildNewSummonsStorage(storage, result, 'totalMultiSummons', 50);
-        await chrome.storage.local.set({ ...newStorage });
+      const newStorage = buildNewSummonsStorage(storage, result, 'totalMultiSummons', 50);
+      await chrome.storage.local.set({ ...newStorage });
 
-        sendResponse({ ...result });
-        sendTabsMessage({ action: 'BACKGROUND_MULTI_SUMMON', result });
-        sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', newStorage });
-      });
+      sendResponse({ ...result });
+      sendTabsMessage({ action: 'BACKGROUND_MULTI_SUMMON', result });
+      sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', newStorage });
       break;
     }
 
