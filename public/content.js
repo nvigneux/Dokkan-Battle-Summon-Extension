@@ -165,7 +165,7 @@ chrome.runtime.onMessage.addListener((message) => {
       break;
     case 'BACKGROUND_SINGLE_SUMMON':
       console.log('Received single summon from background', message.result);
-      displayCardsList('summon-list', [message.result]);
+      displayCardsList('summon-list', message.result);
       break;
     case 'BACKGROUND_MULTI_SUMMON':
       console.log('Received single summon from background', message.result);

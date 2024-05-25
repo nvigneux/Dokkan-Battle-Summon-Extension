@@ -136,6 +136,14 @@ const multiSummon = (cards, rates) => {
   return results;
 };
 
+/**
+ * Returns the category of a card based on its rarity and featured status.
+ *
+ * @param {Object} card - The card object.
+ * @param {number} card.rarity - The rarity of the card.
+ * @param {boolean} card.featured - The featured status of the card.
+ * @returns {string} The category of the card.
+ */
 const getCardCategory = (card) => {
   switch (card.rarity) {
     case 3:
@@ -147,6 +155,39 @@ const getCardCategory = (card) => {
     default:
       return '';
   }
+};
+
+/**
+ * Builds a new storage object with updated summon history, summon count, and total dragon stones.
+ *
+ * @param {Object} storage - The current storage object.
+ * @param {Array} result - The result of the summon.
+ * @param {string} summonType - The type of summon.
+ * @param {number} summonAmount - The amount of dragon stones used for the summon.
+ * @returns {Object} - The new storage object.
+ */
+const buildNewSummonsStorage = (storage, result, summonType, summonAmount) => {
+  const storageInit = { ...storage };
+  const newSummonHistory = result.reduce((acc, card) => {
+    const cardCategory = getCardCategory(card);
+
+    if (!acc[cardCategory][card.id]) {
+      acc[cardCategory][card.id] = { ...card, count: 1 };
+    } else {
+      acc[cardCategory][card.id].count += 1;
+    }
+    return acc;
+  }, {
+    ...storage.summonHistory,
+  });
+
+  const newStorage = {
+    ...storage,
+    summonHistory: newSummonHistory,
+    [summonType]: storageInit[summonType] += 1,
+    totalDS: storageInit.totalDS += summonAmount,
+  };
+  return newStorage;
 };
 
 /**
@@ -169,14 +210,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
 
     case 'USER_SINGLE_SUMMON': {
-      chrome.storage.local.get().then((res) => {
+      chrome.storage.local.get().then(async (res) => {
         const { rates } = res.fetchedUrls[message.gashaId];
         const summonRates = calculateRates(rates);
         const cardsCategory = getCardsByCategory(res.fetchedUrls[message.gashaId]);
-
         const result = summon(cardsCategory, summonRates);
-        sendResponse({ ...result });
-        sendTabsMessage({ action: 'BACKGROUND_SINGLE_SUMMON', result });
+
+        const storage = await chrome.storage.local.get();
+        const newStorage = buildNewSummonsStorage(storage, [result], 'totalSingleSummons', 5);
+        await chrome.storage.local.set({ ...newStorage });
+
+        sendResponse({ result: [result] });
+        sendTabsMessage({ action: 'BACKGROUND_SINGLE_SUMMON', result: [result] });
+        sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', newStorage });
       });
       break;
     }
@@ -189,26 +235,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const result = multiSummon(cardsCategory, summonRates);
 
         const storage = await chrome.storage.local.get();
-        const newSummonHistory = result.reduce((acc, card) => {
-          const cardCategory = getCardCategory(card);
-
-          if (!acc[cardCategory][card.id]) {
-            acc[cardCategory][card.id] = { ...card, count: 1 };
-          } else {
-            acc[cardCategory][card.id].count += 1;
-          }
-          return acc;
-        }, {
-          ...storage.summonHistory,
-        });
-
-        const newStorage = {
-          ...storage,
-          summonHistory: newSummonHistory,
-          totalMultiSummons: storage.totalMultiSummons += 1,
-          totalDS: storage.totalDS += 50,
-        };
-
+        const newStorage = buildNewSummonsStorage(storage, result, 'totalMultiSummons', 50);
         await chrome.storage.local.set({ ...newStorage });
 
         sendResponse({ ...result });
