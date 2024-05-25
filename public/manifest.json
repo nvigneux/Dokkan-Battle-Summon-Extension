@@ -16,7 +16,9 @@
   ],
   "host_permissions": [
     "*://dbz-dokkanbattle.com/*",
-    "*://dbz-dokkanbattle.com/summon/*"
+    "*://dbz-dokkanbattle.com/summons/*",
+    "*://jpn.dbz-dokkanbattle.com/*",
+    "*://jpn.dbz-dokkanbattle.com/summons/*"
   ],
   "action": {
     "default_popup": "index.html",
@@ -29,7 +31,9 @@
     {
       "matches": [
         "*://dbz-dokkanbattle.com/*",
-        "*://dbz-dokkanbattle.com/summon/*"
+        "*://dbz-dokkanbattle.com/summons/*",
+        "*://jpn.dbz-dokkanbattle.com/*",
+        "*://jpn.dbz-dokkanbattle.com/summons/*"
       ],
       "js": ["content.js"],
       "css": ["content.css"]
