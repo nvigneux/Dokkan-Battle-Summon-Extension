@@ -131,7 +131,12 @@ const displayCardsList = (id, cards) => {
 };
 
 const displaySummonButtons = (gashaId) => {
+  if (document.getElementById(`button-single-${gashaId}`) || document.getElementById(`button-multi-${gashaId}`)) {
+    return;
+  }
+
   const buttonSingle = document.createElement('button');
+  buttonSingle.id = `button-single-${gashaId}`;
   buttonSingle.innerHTML = 'Single Summon';
   buttonSingle.classList.add('summon-button');
   buttonSingle.onclick = () => {
@@ -140,6 +145,7 @@ const displaySummonButtons = (gashaId) => {
   document.body.appendChild(buttonSingle);
 
   const buttonMulti = document.createElement('button');
+  buttonMulti.id = `button-multi-${gashaId}`;
   buttonMulti.innerHTML = 'Multi Summon';
   buttonMulti.classList.add('summon-button');
   buttonMulti.onclick = () => {
@@ -164,6 +170,9 @@ chrome.runtime.onMessage.addListener((message) => {
     case 'BACKGROUND_MULTI_SUMMON':
       console.log('Received single summon from background', message.result);
       displayCardsList('summon-list', message.result);
+      break;
+    case 'BACKGROUND_UPDATE_STORAGE':
+      console.log('Received storage update from background', message);
       break;
     case 'REQUEST_INTERCEPTED_GASHA': {
       const { gashaId, data } = message;
