@@ -12,16 +12,12 @@ const initStorage = {
     nonFeaturedSSRs: {},
     featuredSRs: {},
     nonFeaturedSRs: {},
+    Rs: {},
   },
-  totalSummons: 0,
+  totalMultiSummons: 0,
+  totalSingleSummons: 0,
   totalDS: 0,
 };
-
-/**
- * Object to store fetched URLs.
- * @type {Object}
- */
-const fetchedUrls = {};
 
 /**
  * Event listener for the onInstalled event.
@@ -140,6 +136,19 @@ const multiSummon = (cards, rates) => {
   return results;
 };
 
+const getCardCategory = (card) => {
+  switch (card.rarity) {
+    case 3:
+      return card.featured ? 'featuredSSRs' : 'nonFeaturedSSRs';
+    case 2:
+      return card.featured ? 'featuredSRs' : 'nonFeaturedSRs';
+    case 1:
+      return 'Rs';
+    default:
+      return '';
+  }
+};
+
 /**
  * Event listener for the onMessage event.
  * Handles messages sent from content scripts.
@@ -173,14 +182,38 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     case 'USER_MULTI_SUMMON': {
-      chrome.storage.local.get().then((res) => {
+      chrome.storage.local.get().then(async (res) => {
         const { rates } = res.fetchedUrls[message.gashaId];
         const summonRates = calculateRates(rates);
         const cardsCategory = getCardsByCategory(res.fetchedUrls[message.gashaId]);
-
         const result = multiSummon(cardsCategory, summonRates);
+
+        const storage = await chrome.storage.local.get();
+        const newSummonHistory = result.reduce((acc, card) => {
+          const cardCategory = getCardCategory(card);
+
+          if (!acc[cardCategory][card.id]) {
+            acc[cardCategory][card.id] = { ...card, count: 1 };
+          } else {
+            acc[cardCategory][card.id].count += 1;
+          }
+          return acc;
+        }, {
+          ...storage.summonHistory,
+        });
+
+        const newStorage = {
+          ...storage,
+          summonHistory: newSummonHistory,
+          totalMultiSummons: storage.totalMultiSummons += 1,
+          totalDS: storage.totalDS += 50,
+        };
+
+        await chrome.storage.local.set({ ...newStorage });
+
         sendResponse({ ...result });
         sendTabsMessage({ action: 'BACKGROUND_MULTI_SUMMON', result });
+        sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', newStorage });
       });
       break;
     }
@@ -193,14 +226,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 /**
+ * Object to store fetched URLs.
+ * @type {Object}
+ */
+const fetchedUrls = {};
+
+/**
  * Event listener for the onBeforeRequest event.
  * Intercepts and fetches data from the specified URL.
  * @param {Object} details - The details object.
  */
 chrome.webRequest.onBeforeRequest.addListener(
-  (details) => {
+  async (details) => {
     const url = new URL(details.url);
     const gashaId = url.pathname.split('/').pop();
+
+    if (fetchedUrls[gashaId]) {
+      setTimeout(() => {
+        sendTabsMessage({
+          action: 'REQUEST_INTERCEPTED_GASHA', details, data: fetchedUrls[gashaId], gashaId,
+        });
+      }, 1000);
+    }
+
     if (!fetchedUrls[gashaId]) {
       fetchedUrls[gashaId] = {};
       fetch(details.url)
