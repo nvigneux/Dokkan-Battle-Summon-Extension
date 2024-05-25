@@ -80,7 +80,7 @@ const createCardElement = (card) => {
 
   cardItem.innerHTML = `
       <div class="card__container" style="background-image: url(${getCardBackground(card.element, card.rarity)})">
-        <img src="${card.thumb}" alt="${card.name}" class="card__thumb" />
+        <img src="${card.thumb}" alt="${card.name}" title="${card.name}" class="card__thumb" />
         <img src="${getCardRaritySrc(rarity)}" alt="${card.rarity}" class="card__rarity" />
         <img src="${getCardElementSrc(element)}" alt="${card.element}" class="card__element"
       </div>
