@@ -93,17 +93,12 @@ const createCardElement = (card) => {
  * Displays a list of cards on the webpage.
  * @param {Object[]} cards - The list of cards to display.
  */
-const displayCardsList = (id, cards) => {
-  let cardsList = null;
-  if (!document.getElementById(id)) {
-    cardsList = document.createElement('div');
-  } else {
-    cardsList = document.getElementById(id);
-    cardsList.innerHTML = '';
-  }
-  cardsList.id = id;
+const displayCardsList = (id, cards, init = false) => {
+  const cardsList = document.getElementById(id);
+
+  if (init) { cardsList.innerHTML = ''; }
+
   cardsList.classList.add('cards-list');
-  document.body.appendChild(cardsList);
 
   cards.forEach((card) => {
     const cardItem = createCardElement(card);
@@ -115,6 +110,7 @@ const displaySummonButtons = (gashaId) => {
   if (document.getElementById(`button-single-${gashaId}`) || document.getElementById(`button-multi-${gashaId}`)) {
     return;
   }
+  const summonButtons = document.getElementById('summon-buttons');
 
   const buttonSingle = document.createElement('button');
   buttonSingle.id = `button-single-${gashaId}`;
@@ -123,7 +119,7 @@ const displaySummonButtons = (gashaId) => {
   buttonSingle.onclick = () => {
     chrome.runtime.sendMessage({ action: 'USER_SINGLE_SUMMON', gashaId });
   };
-  document.body.appendChild(buttonSingle);
+  summonButtons.appendChild(buttonSingle);
 
   const buttonMulti = document.createElement('button');
   buttonMulti.id = `button-multi-${gashaId}`;
@@ -132,39 +128,83 @@ const displaySummonButtons = (gashaId) => {
   buttonMulti.onclick = () => {
     chrome.runtime.sendMessage({ action: 'USER_MULTI_SUMMON', gashaId });
   };
-  document.body.appendChild(buttonMulti);
+  summonButtons.appendChild(buttonMulti);
+};
+
+const initId = (id) => {
+  if (!document.getElementById(id)) {
+    const summonList = document.createElement('div');
+    summonList.id = id;
+    summonList.classList.add('summon-list');
+    document.body.appendChild(summonList);
+  }
+};
+
+const displaySummonedCardsList = (cards, summonsCards, category, init = false) => {
+  const cardsList = document.getElementById(`summon-${category}`);
+  if (init) { cardsList.innerHTML = ''; }
+  cardsList.classList.add('cards-list');
+  console.log('displaySummonedCardsList');
+  cards.forEach((card) => {
+    if (!summonsCards[card.id]) {
+      return;
+    }
+    const cardItem = createCardElement(card);
+    cardsList.appendChild(cardItem);
+  });
+};
+
+// add a promise to wait for the element to be created
+const initDisplaySummonList = async () => {
+  try {
+    await Promise.all([
+      initId('summon-buttons'),
+      initId('summon-result'), // summons results
+      initId('summon-featuredSSRs'),
+      initId('summon-nonFeaturedSSRs'),
+      initId('summon-featuredSRs'),
+      initId('summon-nonFeaturedSRs'),
+      initId('summon-Rs'),
+      initId('cards-list'), // init cards list to load all thumbs
+    ]);
+    console.log('All IDs have been successfully initialized.');
+  } catch (error) {
+    console.error('An error occurred during the initialization of IDs:', error);
+  }
+};
+
+const displaySummonedCards = (cards, summonCards) => {
+  displaySummonedCardsList(cards.featuredSSRs, summonCards, 'featuredSSRs', true);
 };
 
 /**
  * Event listener for messages from the background script.
  * @param {Object} message - The message received from the background script.
  */
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener(async (message) => {
   switch (message.action) {
-    case 'BACKGROUND_UPDATE_COUNT':
-      // console.log('Received update count from background', message);
-      break;
     case 'BACKGROUND_SINGLE_SUMMON':
-      console.log('Received single summon from background', message.result);
-      displayCardsList('summon-list', message.result);
+      displayCardsList('summon-result', message.result, true);
       break;
     case 'BACKGROUND_MULTI_SUMMON':
-      console.log('Received single summon from background', message.result);
-      displayCardsList('summon-list', message.result);
+      console.log(message);
+      displayCardsList('summon-result', message.result, true);
       break;
-    case 'BACKGROUND_UPDATE_STORAGE':
-      console.log('Received storage update from background', message);
+    case 'BACKGROUND_UPDATE_STORAGE': {
+      const { summonCards, fetchedUrls, gashaId } = message.storage;
+      console.log(message.storage);
+      displaySummonedCards(fetchedUrls[gashaId], summonCards);
       break;
+    }
     case 'REQUEST_INTERCEPTED_GASHA': {
       const { gashaId, data } = message;
-      console.log('Received request intercepted from background', message);
+      await initDisplaySummonList();
 
       displaySummonButtons(gashaId);
-      displayCardsList('cards-list', [...data.featured_cards, ...data.normal_cards]);
-    }
+      displayCardsList('cards-list', [...data.featured_cards, ...data.normal_cards], true);
       break;
+    }
     default:
-      // Handle other actions here
       break;
   }
 });

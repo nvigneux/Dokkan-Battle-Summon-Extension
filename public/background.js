@@ -6,13 +6,8 @@
  */
 const initStorage = {
   fetchedUrls: {},
-  summonHistory: {
-    featuredSSRs: {},
-    nonFeaturedSSRs: {},
-    featuredSRs: {},
-    nonFeaturedSRs: {},
-    Rs: {},
-  },
+  summonHistory: [],
+  summonCards: {},
   totalMultiSummons: 0,
   totalSingleSummons: 0,
   totalDS: 0,
@@ -135,26 +130,26 @@ const multiSummon = (cards, rates) => {
   return results;
 };
 
-/**
- * Returns the category of a card based on its rarity and featured status.
- *
- * @param {Object} card - The card object.
- * @param {number} card.rarity - The rarity of the card.
- * @param {boolean} card.featured - The featured status of the card.
- * @returns {string} The category of the card.
- */
-const getCardCategory = (card) => {
-  switch (card.rarity) {
-    case 3:
-      return card.featured ? 'featuredSSRs' : 'nonFeaturedSSRs';
-    case 2:
-      return card.featured ? 'featuredSRs' : 'nonFeaturedSRs';
-    case 1:
-      return 'Rs';
-    default:
-      return '';
-  }
-};
+// /**
+//  * Returns the category of a card based on its rarity and featured status.
+//  *
+//  * @param {Object} card - The card object.
+//  * @param {number} card.rarity - The rarity of the card.
+//  * @param {boolean} card.featured - The featured status of the card.
+//  * @returns {string} The category of the card.
+//  */
+// const getCardCategory = (card) => {
+//   switch (card.rarity) {
+//     case 3:
+//       return card.featured ? 'featuredSSRs' : 'nonFeaturedSSRs';
+//     case 2:
+//       return card.featured ? 'featuredSRs' : 'nonFeaturedSRs';
+//     case 1:
+//       return 'Rs';
+//     default:
+//       return '';
+//   }
+// };
 
 /**
  * Builds a new storage object with updated summon history, summon count, and total dragon stones.
@@ -167,22 +162,17 @@ const getCardCategory = (card) => {
  */
 const buildNewSummonsStorage = (storage, result, summonType, summonAmount) => {
   const storageInit = { ...storage };
-  const newSummonHistory = result.reduce((acc, card) => {
-    const cardCategory = getCardCategory(card);
-
-    if (!acc[cardCategory][card.id]) {
-      acc[cardCategory][card.id] = { ...card, count: 1 };
-    } else {
-      acc[cardCategory][card.id].count += 1;
-    }
+  const newSummonCards = result.reduce((acc, card) => {
+    acc[card.id] = { ...card, count: !acc[card.id] ? 1 : acc[card.id].count += 1 };
     return acc;
   }, {
-    ...storage.summonHistory,
+    ...storage.summonCards,
   });
 
   const newStorage = {
     ...storage,
-    summonHistory: newSummonHistory,
+    summonCards: newSummonCards,
+    summonHistory: storageInit.summonHistory.concat({ result }),
     [summonType]: storageInit[summonType] += 1,
     totalDS: storageInit.totalDS += summonAmount,
   };
@@ -211,7 +201,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
       sendResponse({ result: [result] });
       sendTabsMessage({ action: 'BACKGROUND_SINGLE_SUMMON', result: [result] });
-      sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', newStorage });
+      sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', storage: { ...newStorage }, gashaId: message.gashaId });
       break;
     }
 
@@ -227,7 +217,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
       sendResponse({ ...result });
       sendTabsMessage({ action: 'BACKGROUND_MULTI_SUMMON', result });
-      sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', newStorage });
+      sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', storage: { ...newStorage }, gashaId: message.gashaId });
       break;
     }
 
@@ -267,7 +257,8 @@ chrome.webRequest.onBeforeRequest.addListener(
       fetch(details.url)
         .then((response) => response.json())
         .then((data) => {
-          fetchedUrls[gashaId] = data;
+          const cardsCategory = getCardsByCategory(data);
+          fetchedUrls[gashaId] = { ...data, ...cardsCategory };
           sendTabsMessage({
             action: 'REQUEST_INTERCEPTED_GASHA', details, data, gashaId,
           });
