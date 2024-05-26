@@ -82,11 +82,81 @@ const createCardElement = (card) => {
       <div class="card__container" style="background-image: url(${getCardBackground(card.element, card.rarity)})">
         <img src="${card.thumb}" alt="${card.name}" title="${card.name}" class="card__thumb" />
         <img src="${getCardRaritySrc(rarity)}" alt="${card.rarity}" class="card__rarity" />
-        <img src="${getCardElementSrc(element)}" alt="${card.element}" class="card__element"
+        <img src="${getCardElementSrc(element)}" alt="${card.element}" class="card__element" />
+        ${card.count ? (`<span class="card__count">${card.count}</span>`) : ''}
       </div>
     `;
 
   return cardItem;
+};
+
+/**
+ * Initializes an element with the specified id if it doesn't already exist.
+ * @param {string} id - The id of the element to initialize.
+ */
+const initId = (id) => {
+  if (!document.getElementById(id)) {
+    const summonList = document.createElement('div');
+    summonList.id = id;
+    summonList.classList.add('summon-list');
+    document.body.appendChild(summonList);
+  }
+};
+
+/**
+ * Initializes the display of the summon list.
+ * @returns {Promise<void>} A promise that resolves when all IDs have been successfully initialized.
+ */
+const initDisplaySummonList = async () => {
+  try {
+    await Promise.all([
+      initId('summon-buttons'),
+      initId('summon-result'), // summons results
+      initId('summon-featuredSSRs'),
+      initId('summon-nonFeaturedSSRs'),
+      initId('cards-list'), // init cards list to load all thumbs
+    ]);
+  } catch (error) {
+    console.error('An error occurred during the initialization of IDs:', error);
+  }
+};
+
+/**
+ * Creates a summon button element.
+ *
+ * @param {string} gashaId - The ID of the gasha.
+ * @param {string} buttonText - The text to display on the button.
+ * @param {string} action - The action associated with the button.
+ * @returns {HTMLButtonElement} The created button element.
+ */
+const createSummonButton = (gashaId, buttonText, action) => {
+  const button = document.createElement('button');
+  button.id = `button-${action}-${gashaId}`;
+  button.innerHTML = buttonText;
+  button.classList.add('summon-button');
+  button.onclick = () => {
+    chrome.runtime.sendMessage({ action: `USER_${action.toUpperCase()}_SUMMON`, gashaId });
+  };
+  return button;
+};
+
+/**
+ * Displays the summon buttons for a given gashaId.
+ *
+ * @param {string} gashaId - The ID of the gasha.
+ * @returns {void}
+ */
+const displaySummonButtons = (gashaId) => {
+  if (document.getElementById(`button-single-${gashaId}`) || document.getElementById(`button-multi-${gashaId}`)) {
+    return;
+  }
+  const summonButtons = document.getElementById('summon-buttons');
+
+  const buttonSingle = createSummonButton(gashaId, 'Single Summon', 'single');
+  summonButtons.appendChild(buttonSingle);
+
+  const buttonMulti = createSummonButton(gashaId, 'Multi Summon', 'multi');
+  summonButtons.appendChild(buttonMulti);
 };
 
 /**
@@ -95,49 +165,13 @@ const createCardElement = (card) => {
  */
 const displayCardsList = (id, cards, init = false) => {
   const cardsList = document.getElementById(id);
-
   if (init) { cardsList.innerHTML = ''; }
-
   cardsList.classList.add('cards-list');
 
   cards.forEach((card) => {
     const cardItem = createCardElement(card);
     cardsList.appendChild(cardItem);
   });
-};
-
-const displaySummonButtons = (gashaId) => {
-  if (document.getElementById(`button-single-${gashaId}`) || document.getElementById(`button-multi-${gashaId}`)) {
-    return;
-  }
-  const summonButtons = document.getElementById('summon-buttons');
-
-  const buttonSingle = document.createElement('button');
-  buttonSingle.id = `button-single-${gashaId}`;
-  buttonSingle.innerHTML = 'Single Summon';
-  buttonSingle.classList.add('summon-button');
-  buttonSingle.onclick = () => {
-    chrome.runtime.sendMessage({ action: 'USER_SINGLE_SUMMON', gashaId });
-  };
-  summonButtons.appendChild(buttonSingle);
-
-  const buttonMulti = document.createElement('button');
-  buttonMulti.id = `button-multi-${gashaId}`;
-  buttonMulti.innerHTML = 'Multi Summon';
-  buttonMulti.classList.add('summon-button');
-  buttonMulti.onclick = () => {
-    chrome.runtime.sendMessage({ action: 'USER_MULTI_SUMMON', gashaId });
-  };
-  summonButtons.appendChild(buttonMulti);
-};
-
-const initId = (id) => {
-  if (!document.getElementById(id)) {
-    const summonList = document.createElement('div');
-    summonList.id = id;
-    summonList.classList.add('summon-list');
-    document.body.appendChild(summonList);
-  }
 };
 
 const displaySummonedCardsList = (cards, summonsCards, category, init = false) => {
@@ -148,30 +182,21 @@ const displaySummonedCardsList = (cards, summonsCards, category, init = false) =
     if (!summonsCards[card.id]) {
       return;
     }
-    const cardItem = createCardElement(card);
+    const cardItem = createCardElement(summonsCards[card.id]);
     cardsList.appendChild(cardItem);
   });
 };
 
-// add a promise to wait for the element to be created
-const initDisplaySummonList = async () => {
-  try {
-    await Promise.all([
-      initId('summon-buttons'),
-      initId('summon-result'), // summons results
-      initId('summon-featuredSSRs'),
-      initId('summon-nonFeaturedSSRs'),
-      initId('cards-list'), // init cards list to load all thumbs
-    ]);
-    console.log('All IDs have been successfully initialized.');
-  } catch (error) {
-    console.error('An error occurred during the initialization of IDs:', error);
-  }
-};
-
+/**
+ * Displays the summoned cards.
+ *
+ * @param {Object} cards - The object containing the summoned cards.
+ * @param {Array} summonCards - The array of cards to be displayed.
+ */
 const displaySummonedCards = (cards, summonCards) => {
-  displaySummonedCardsList(cards.featuredSSRs, summonCards, 'featuredSSRs', true);
-  displaySummonedCardsList(cards.nonFeaturedSSRs, summonCards, 'nonFeaturedSSRs', true);
+  const { featuredSSRs, nonFeaturedSSRs } = cards;
+  displaySummonedCardsList(featuredSSRs, summonCards, 'featuredSSRs', true);
+  displaySummonedCardsList(nonFeaturedSSRs, summonCards, 'nonFeaturedSSRs', true);
 };
 
 /**
@@ -184,7 +209,6 @@ chrome.runtime.onMessage.addListener(async (message) => {
       displayCardsList('summon-result', message.result, true);
       break;
     case 'BACKGROUND_MULTI_SUMMON':
-      console.log(message);
       displayCardsList('summon-result', message.result, true);
       break;
     case 'BACKGROUND_UPDATE_STORAGE': {
@@ -195,7 +219,6 @@ chrome.runtime.onMessage.addListener(async (message) => {
     case 'REQUEST_INTERCEPTED_GASHA': {
       const { gashaId, data } = message;
       await initDisplaySummonList();
-
       displaySummonButtons(gashaId);
       displayCardsList('cards-list', [...data.featured_cards, ...data.normal_cards], true);
       break;
