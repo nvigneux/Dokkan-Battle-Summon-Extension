@@ -246,6 +246,7 @@ chrome.webRequest.onBeforeRequest.addListener(
 
     if (fetchedUrls[gashaId]) {
       setTimeout(() => {
+        chrome.storage.local.set({ ...initStorage, fetchedUrls });
         sendTabsMessage({
           action: 'REQUEST_INTERCEPTED_GASHA', details, data: fetchedUrls[gashaId], gashaId,
         });
@@ -262,7 +263,7 @@ chrome.webRequest.onBeforeRequest.addListener(
           sendTabsMessage({
             action: 'REQUEST_INTERCEPTED_GASHA', details, data, gashaId,
           });
-          chrome.storage.local.set({ fetchedUrls });
+          chrome.storage.local.set({ ...initStorage, fetchedUrls });
         });
     }
   },
