@@ -144,7 +144,6 @@ const displaySummonedCardsList = (cards, summonsCards, category, init = false) =
   const cardsList = document.getElementById(`summon-${category}`);
   if (init) { cardsList.innerHTML = ''; }
   cardsList.classList.add('cards-list');
-  console.log('displaySummonedCardsList');
   cards.forEach((card) => {
     if (!summonsCards[card.id]) {
       return;
@@ -162,9 +161,6 @@ const initDisplaySummonList = async () => {
       initId('summon-result'), // summons results
       initId('summon-featuredSSRs'),
       initId('summon-nonFeaturedSSRs'),
-      initId('summon-featuredSRs'),
-      initId('summon-nonFeaturedSRs'),
-      initId('summon-Rs'),
       initId('cards-list'), // init cards list to load all thumbs
     ]);
     console.log('All IDs have been successfully initialized.');
@@ -175,6 +171,7 @@ const initDisplaySummonList = async () => {
 
 const displaySummonedCards = (cards, summonCards) => {
   displaySummonedCardsList(cards.featuredSSRs, summonCards, 'featuredSSRs', true);
+  displaySummonedCardsList(cards.nonFeaturedSSRs, summonCards, 'nonFeaturedSSRs', true);
 };
 
 /**
@@ -191,9 +188,8 @@ chrome.runtime.onMessage.addListener(async (message) => {
       displayCardsList('summon-result', message.result, true);
       break;
     case 'BACKGROUND_UPDATE_STORAGE': {
-      const { summonCards, fetchedUrls, gashaId } = message.storage;
-      console.log(message.storage);
-      displaySummonedCards(fetchedUrls[gashaId], summonCards);
+      const { summonCards, fetchedUrls } = message.storage;
+      displaySummonedCards(fetchedUrls[message.gashaId], summonCards);
       break;
     }
     case 'REQUEST_INTERCEPTED_GASHA': {
