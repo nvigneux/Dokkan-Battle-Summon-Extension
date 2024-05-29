@@ -9,7 +9,7 @@
 
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--card-size), 1fr));
-  gap: 1rem;
+  gap: 1.25rem;
   margin: 1rem 1rem 3rem;
 }
 
@@ -74,6 +74,12 @@
 }
 
 /* SUMMONS BUTTON */
+#summon-buttons {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
 .summon-button {
   border: 0;
   padding: 0.5rem 1rem;
@@ -92,4 +98,67 @@
 
 .summon-button:active {
   background-color: #d1d1d1;
+}
+
+/* SUMMONS LIST */
+.summon-list {
+  --card-size: 5.2rem;
+}
+
+/* SECTIONS */
+.section {
+  display: flex;
+  background-color: rgb(29, 38, 47);
+  border-style: dashed;
+  border-color: rgb(18, 69, 89);
+  border-image: initial;
+  border-width: 1px 0px;
+  padding: 1rem 0px;
+  position: relative;
+  text-align: center;
+  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+}
+
+.section__dragon-ball {
+  width: 20px;
+}
+
+.section__title {
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 400;
+  margin: 0px 1rem;
+}
+
+/* STATS */
+.summon-stats__wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.summon-stats__container {
+  display: flex;
+  flex-flow: column wrap;
+  gap: 0.25rem;
+}
+
+.summon-stats__title {
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.summon-stats__value {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* RESET */
+.humix-universal-js-insert {
+  display: none !important;
 }
