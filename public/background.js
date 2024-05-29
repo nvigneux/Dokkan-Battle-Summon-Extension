@@ -6,6 +6,9 @@
  */
 const initStorage = {
   fetchedUrls: {},
+};
+
+const initStorageSummon = {
   summonHistory: [],
   summonCards: {},
   totalMultiSummons: 0,
@@ -29,7 +32,7 @@ const sendTabsMessage = (message) => {
   // send requestStatus to every active tab
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
-      if (tab?.url) chrome.tabs.sendMessage(tab.id, message);
+      if (tab?.url?.includes(message.gashaId)) chrome.tabs.sendMessage(tab.id, message);
     });
   });
 };
@@ -68,13 +71,19 @@ const getCardsByCategory = (cards) => ({
  * @param {Array} rates - The rates array containing the rates for different card types.
  * @returns {Object} - An object containing the calculated rates for different card types.
  */
-const calculateRates = (rates) => ({
-  featuredSSR: parseFloat(rates[0].featured_rate) / 100,
-  nonFeaturedSSR: parseFloat(rates[0].normal_rate) / 100,
-  featuredSR: parseFloat(rates[1].featured_rate) / 100,
-  nonFeaturedSR: parseFloat(rates[1].normal_rate) / 100,
-  R: parseFloat(rates[2].total_rate) / 100,
-});
+const calculateRates = (rates) => {
+  const ratesSsr = rates.filter((rate) => rate.rarity === 3);
+  const ratesSr = rates.filter((rate) => rate.rarity === 2);
+  const ratesR = rates.filter((rate) => rate.rarity === 1);
+
+  return ({
+    featuredSSR: ratesSsr[0]?.featured_rate ? parseFloat(ratesSsr[0].featured_rate) / 100 : 0,
+    nonFeaturedSSR: ratesSsr[0]?.normal_rate ? parseFloat(ratesSsr[0].normal_rate) / 100 : 0,
+    featuredSR: ratesSr[0]?.featured_rate ? parseFloat(ratesSr[0].featured_rate) / 100 : 0,
+    nonFeaturedSR: ratesSr[0]?.normal_rate ? parseFloat(ratesSr[0].normal_rate) / 100 : 0,
+    R: ratesR[0]?.total_rate ? parseFloat(ratesR[0].total_rate) / 100 : 0,
+  });
+};
 
 /**
  * Selects a guaranteed SSR card from the given set of cards.
@@ -103,11 +112,14 @@ const summon = (cards, rates) => {
 
   if (rand < rates.featuredSSR) {
     return getRandomItem(cards.featuredSSRs);
-  } if (rand < rates.featuredSSR + rates.nonFeaturedSSR) {
-    return getRandomItem(cards.nonFeaturedSSRs);
-  } if (rand < rates.featuredSSR + rates.nonFeaturedSSR + rates.featuredSR) {
+  }
+  if (rand < rates.featuredSSR + rates.featuredSR) {
     return getRandomItem(cards.featuredSRs);
-  } if (rand < rates.featuredSSR + rates.nonFeaturedSSR
+  }
+  if (rand < rates.featuredSSR + rates.featuredSR + rates.nonFeaturedSSR) {
+    return getRandomItem(cards.nonFeaturedSSRs);
+  }
+  if (rand < rates.featuredSSR + rates.nonFeaturedSSR
     + rates.featuredSR + rates.nonFeaturedSR) {
     return getRandomItem(cards.nonFeaturedSRs);
   }
@@ -160,21 +172,27 @@ const multiSummon = (cards, rates) => {
  * @param {number} summonAmount - The amount of dragon stones used for the summon.
  * @returns {Object} - The new storage object.
  */
-const buildNewSummonsStorage = (storage, result, summonType, summonAmount) => {
+const buildNewSummonsStorage = (storage, result, summonType, summonAmount, gashaId) => {
   const storageInit = { ...storage };
+  const { summonCards, summonHistory, totalDS } = storageInit[gashaId];
+
   const newSummonCards = result.reduce((acc, card) => {
     acc[card.id] = { ...card, count: !acc[card.id] ? 1 : acc[card.id].count += 1 };
     return acc;
   }, {
-    ...storage.summonCards,
+    ...summonCards,
   });
 
+  const newTotalDS = totalDS + summonAmount;
   const newStorage = {
     ...storage,
-    summonCards: newSummonCards,
-    summonHistory: storageInit.summonHistory.concat({ result }),
-    [summonType]: storageInit[summonType] += 1,
-    totalDS: storageInit.totalDS += summonAmount,
+    [gashaId]: {
+      ...storageInit[gashaId],
+      summonCards: newSummonCards,
+      summonHistory: summonHistory.concat({ result }),
+      [summonType]: storageInit[gashaId][summonType] += 1,
+      totalDS: newTotalDS,
+    },
   };
   return newStorage;
 };
@@ -192,15 +210,16 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     case 'USER_SINGLE_SUMMON': {
       const storage = await chrome.storage.local.get();
       const { rates } = storage.fetchedUrls[message.gashaId];
+
       const summonRates = calculateRates(rates);
       const cardsCategory = getCardsByCategory(storage.fetchedUrls[message.gashaId]);
       const result = summon(cardsCategory, summonRates);
 
-      const newStorage = buildNewSummonsStorage(storage, [result], 'totalSingleSummons', 5);
+      const newStorage = buildNewSummonsStorage(storage, [result], 'totalSingleSummons', 5, message.gashaId);
       await chrome.storage.local.set({ ...newStorage });
 
       sendResponse({ result: [result] });
-      sendTabsMessage({ action: 'BACKGROUND_SINGLE_SUMMON', result: [result] });
+      sendTabsMessage({ action: 'BACKGROUND_SINGLE_SUMMON', result: [result], gashaId: message.gashaId });
       sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', storage: { ...newStorage }, gashaId: message.gashaId });
       break;
     }
@@ -212,11 +231,11 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       const cardsCategory = getCardsByCategory(storage.fetchedUrls[message.gashaId]);
       const result = multiSummon(cardsCategory, summonRates);
 
-      const newStorage = buildNewSummonsStorage(storage, result, 'totalMultiSummons', 50);
+      const newStorage = buildNewSummonsStorage(storage, result, 'totalMultiSummons', 50, message.gashaId);
       await chrome.storage.local.set({ ...newStorage });
 
       sendResponse({ ...result });
-      sendTabsMessage({ action: 'BACKGROUND_MULTI_SUMMON', result });
+      sendTabsMessage({ action: 'BACKGROUND_MULTI_SUMMON', result, gashaId: message.gashaId });
       sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', storage: { ...newStorage }, gashaId: message.gashaId });
       break;
     }
@@ -246,7 +265,11 @@ chrome.webRequest.onBeforeRequest.addListener(
 
     if (fetchedUrls[gashaId]) {
       setTimeout(() => {
-        chrome.storage.local.set({ ...initStorage, fetchedUrls });
+        chrome.storage.local.set({
+          ...initStorage,
+          fetchedUrls: { ...fetchedUrls },
+          [gashaId]: { ...initStorageSummon },
+        });
         sendTabsMessage({
           action: 'REQUEST_INTERCEPTED_GASHA', details, data: fetchedUrls[gashaId], gashaId,
         });
@@ -263,7 +286,11 @@ chrome.webRequest.onBeforeRequest.addListener(
           sendTabsMessage({
             action: 'REQUEST_INTERCEPTED_GASHA', details, data, gashaId,
           });
-          chrome.storage.local.set({ ...initStorage, fetchedUrls });
+          chrome.storage.local.set({
+            ...initStorage,
+            fetchedUrls: { ...fetchedUrls },
+            [gashaId]: { ...initStorageSummon },
+          });
         });
     }
   },
