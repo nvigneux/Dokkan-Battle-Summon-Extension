@@ -10,6 +10,12 @@
 - Display a counter for the Dragon Stones used
 - Show the list of SSRs summoned, featured and non-featured
 
+## Screenshots
+
+![Summon](public/assets/readme/Dokkan-Summon-Simulator-2.webp)
+
+![Summon](public/assets/readme/Dokkan-Summon-Simulator-1.webp)
+
 ## Installation
 
 1. Clone this repository to your local machine:
@@ -31,8 +37,6 @@
    - Open `chrome://extensions/`.
    - Enable `Developer mode`.
    - Click `Load unpacked` and select the `build` folder of your project.
-
-## Screenshots
 
 ## Commit Convention
 
