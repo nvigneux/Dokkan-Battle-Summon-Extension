@@ -14,7 +14,7 @@
 
 ![Summon](public/assets/readme/Dokkan-Summon-Simulator-2.webp)
 
-![Summon](public/assets/readme/Dokkan-Summon-Simulator-1.webp)
+![Summon pages](public/assets/readme/Dokkan-Summon-Simulator-1.webp)
 
 ## Installation
 
