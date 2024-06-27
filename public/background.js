@@ -240,6 +240,17 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       break;
     }
 
+    case 'USER_RESET_SUMMONS': {
+      const storage = await chrome.storage.local.get();
+      const newStorage = { ...storage, [message.gashaId]: { ...initStorageSummon } };
+      await chrome.storage.local.set({ ...newStorage });
+
+      sendResponse({ success: true });
+      sendTabsMessage({ action: 'BACKGROUND_RESET_SUMMONS', gashaId: message.gashaId });
+      sendTabsMessage({ action: 'BACKGROUND_UPDATE_STORAGE', storage: { ...newStorage }, gashaId: message.gashaId });
+      break;
+    }
+
     default:
       // Handle other actions here
       break;
@@ -273,7 +284,7 @@ chrome.webRequest.onBeforeRequest.addListener(
         sendTabsMessage({
           action: 'REQUEST_INTERCEPTED_GASHA', details, data: fetchedUrls[gashaId], gashaId,
         });
-      }, 1000);
+      }, 2000);
     }
 
     if (!fetchedUrls[gashaId]) {
