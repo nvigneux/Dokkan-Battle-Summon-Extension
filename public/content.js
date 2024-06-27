@@ -1,6 +1,6 @@
 const LABEL = {
-  featuredSSRs: 'Featured SSRs',
-  nonFeaturedSSRs: 'Non-Featured SSRs',
+  featuredSSRs: 'SSR détecteur',
+  nonFeaturedSSRs: 'SSR hors détecteur',
 };
 
 /**
@@ -164,6 +164,17 @@ const initSectionId = (id, target, title) => new Promise((resolve, reject) => {
 });
 
 /**
+ * Removes an element from the DOM based on its ID.
+ * @param {string} id - The ID of the element to be removed.
+ */
+const removeId = (id) => {
+  const element = document.getElementById(id);
+  if (element) {
+    element.remove();
+  }
+};
+
+/**
  * Finds the animated image element for a given gasha ID.
  * @param {string} gashaId - The ID of the gasha.
  * @returns {Element|null} - The animated image element if found, or null if not found.
@@ -202,7 +213,7 @@ const initDisplaySummonList = async (gashaId) => {
   const target = staticTarget || animatedTarget;
   try {
     await Promise.all([
-      initSectionId('section-summon', target, 'Summon Simmulator'),
+      initSectionId('section-summon', target, 'Summon Simulator'),
       initId('summon-stats', target),
       initId('summon-buttons', target),
       initId('summon-result', target), // summons results
@@ -213,7 +224,7 @@ const initDisplaySummonList = async (gashaId) => {
       initId('cards-list', document.body), // init cards list to load all thumbs
     ]);
   } catch (error) {
-    console.error('An error occurred during the initialization of IDs:', error);
+    return false;
   }
   return true;
 };
@@ -230,7 +241,11 @@ const createSummonButton = (gashaId, buttonText, action) => {
   const button = document.createElement('button');
   button.id = `button-${action}-${gashaId}`;
   button.innerHTML = buttonText;
-  button.classList.add('summon-button');
+
+  const url = chrome.runtime.getURL(`assets/${action}_summon.webp`);
+
+  button.style.backgroundImage = `url(${url})`;
+  button.classList.add('summon-button', `summon-button__${action}`);
   button.onclick = () => {
     chrome.runtime.sendMessage({ action: `USER_${action.toUpperCase()}_SUMMON`, gashaId });
   };
@@ -262,34 +277,39 @@ const displaySummonButtons = (gashaId) => {
  */
 const displayCardsList = (id, cards, init = false) => {
   const cardsList = document.getElementById(id);
-  if (init) { cardsList.innerHTML = ''; }
+  if (cardsList && init) { cardsList.innerHTML = ''; }
   cardsList.classList.add('cards-list');
 
   cards.forEach((card) => {
     const cardItem = createCardElement(card);
+    // add class to featured card
+    if (card?.featured && card.rarity === 3) {
+      cardItem.classList.add('card--featured');
+    }
     cardsList.appendChild(cardItem);
   });
 };
 
 const displaySummonedCardsList = (cards, summonsCards, category, init = false) => {
   const cardsList = document.getElementById(`summon-${category}`);
-  if (init) {
-    cardsList.innerHTML = '';
-  }
+  if (cardsList && init) { cardsList.innerHTML = ''; }
 
-  if (!document.getElementById(`section-${category}`).firstChild) {
+  if (!document.getElementById(`section-${category}`)?.firstChild) {
     const section = createSection(`section-${category}`, LABEL[category]);
-    document.getElementById(`section-${category}`).appendChild(section);
+    const sectionContainer = document.getElementById(`section-${category}`);
+    if (sectionContainer) { sectionContainer.appendChild(section); }
   }
 
-  cardsList.classList.add('cards-list');
-  cards.forEach((card) => {
-    if (!summonsCards[card.id]) {
-      return;
-    }
-    const cardItem = createCardElement(summonsCards[card.id]);
-    cardsList.appendChild(cardItem);
-  });
+  if (cardsList) {
+    cardsList.classList.add('cards-list');
+    cards.forEach((card) => {
+      if (!summonsCards[card.id]) {
+        return;
+      }
+      const cardItem = createCardElement(summonsCards[card.id]);
+      cardsList.appendChild(cardItem);
+    });
+  }
 };
 
 /**
@@ -312,25 +332,48 @@ const displaySummonedCards = (cards, summonCards) => {
  * @param {number} totalDs - The total number of dragon stones used.
  */
 const displaySummonStats = (totalMulti, totalSingle, totalDs) => {
+  const dsImg = chrome.runtime.getURL('assets/ds.webp');
   const summonStats = document.getElementById('summon-stats');
+
   summonStats.innerHTML = `
     <div class="summon-stats__wrapper">
-      <div class="summon-stats__container">
+      <div class="summon-stats">
         <div class="summon-stats__row">
-          <span class="summon-stats__title">Total Multi Summons: </span>
-          <span class="summon-stats__value">${totalMulti}</span>
-        </div>
-        <div class="summon-stats__row">
-          <span class="summon-stats__title">Total Single Summons: </span>
+          <span class="summon-stats__title">Single: </span>
           <span class="summon-stats__value">${totalSingle}</span>
         </div>
+        <div class="summon-stats__row">
+          <span class="summon-stats__title">Multi: </span>
+          <span class="summon-stats__value">${totalMulti}</span>
+        </div>
       </div>
-      <div class="summon-stats__row">
-        <span class="summon-stats__title">Total Dragon Stones Used: </span>
-        <span class="summon-stats__value">${totalDs}</span>
+      <div class="summon-stats">
+        <div class="summon-stats__row" id="summon-button-reset">
+        </div>
+        <div class="summon-stats__row">
+          <img src="${dsImg}" class="summon-stats__img" />
+          <span class="summon-stats__ds">${totalDs}</span>
+        </div>
       </div>
     </div>
   `;
+};
+
+/**
+ * Displays a reset button for a summon.
+ * @param {string} gashaId - The ID of the summon.
+ */
+const displaySummonResetButton = (gashaId) => {
+  const summonButtonReset = document.getElementById('summon-button-reset');
+  const buttonReset = document.createElement('button');
+  buttonReset.innerHTML = 'Reset';
+  buttonReset.id = 'button-reset';
+  buttonReset.classList.add('summon-button', 'summon-button__reset');
+  buttonReset.onclick = () => {
+    chrome.runtime.sendMessage({ action: 'USER_RESET_SUMMONS', gashaId });
+  };
+
+  summonButtonReset.appendChild(buttonReset);
 };
 
 /**
@@ -340,9 +383,11 @@ const displaySummonStats = (totalMulti, totalSingle, totalDs) => {
 chrome.runtime.onMessage.addListener(async (message) => {
   switch (message.action) {
     case 'BACKGROUND_SINGLE_SUMMON':
+      await initDisplaySummonList(message.gashaId);
       displayCardsList('summon-result', message.result, true);
       break;
     case 'BACKGROUND_MULTI_SUMMON':
+      await initDisplaySummonList(message.gashaId);
       displayCardsList('summon-result', message.result, true);
       break;
     case 'BACKGROUND_UPDATE_STORAGE': {
@@ -356,17 +401,28 @@ chrome.runtime.onMessage.addListener(async (message) => {
         summonCards,
       } = message.storage[message.gashaId];
 
-      displaySummonStats(totalMultiSummons, totalSingleSummons, totalDS);
-      displaySummonedCards(fetchedUrls[message.gashaId], summonCards);
+      displaySummonStats(totalMultiSummons, totalSingleSummons, totalDS, message.gashaId);
+      if (totalDS !== 0) {
+        displaySummonResetButton(message.gashaId);
+        displaySummonedCards(fetchedUrls[message.gashaId], summonCards);
+      }
       break;
     }
+
     case 'REQUEST_INTERCEPTED_GASHA': {
-      const { gashaId, data } = message;
+      const { gashaId } = message;
 
       await initDisplaySummonList(gashaId);
       displaySummonButtons(gashaId);
       displaySummonStats(0, 0, 0);
-      displayCardsList('cards-list', [...data.featured_cards, ...data.normal_cards], true);
+      break;
+    }
+
+    case 'BACKGROUND_RESET_SUMMONS': {
+      displayCardsList('summon-result', [], true);
+      removeId('summon-result');
+      removeId('featuredSSRs');
+      removeId('nonFeaturedSSRs');
       break;
     }
     default:
