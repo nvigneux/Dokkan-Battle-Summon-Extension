@@ -24,8 +24,7 @@
     "default_title": "Dokkan Battle Summon Extension"
   },
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "scripts": ["background.js"]
   },
   "content_scripts": [
     {
@@ -44,5 +43,10 @@
       "resources": ["*.webp"],
       "matches": ["*://dbz-dokkanbattle.com/*", "*://jpn.dbz-dokkanbattle.com/*"]
     }
-  ]
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{ccab1695-e547-429f-92ac-f1bbe5cdb41c}"
+    }
+  }
 }
