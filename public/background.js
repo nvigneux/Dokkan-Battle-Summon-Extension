@@ -1,3 +1,5 @@
+const browserApi = (typeof browser !== 'undefined') ? browser : chrome;
+
 /* eslint-disable camelcase */
 /**
  * Initial storage object.
@@ -20,8 +22,8 @@ const initStorageSummon = {
  * Event listener for the onInstalled event.
  * Sets the initial storage value when the extension is installed or updated.
  */
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.set({ ...initStorage });
+browserApi.runtime.onInstalled.addListener(() => {
+  browserApi.storage.local.set({ ...initStorage });
 });
 
 /**
@@ -30,9 +32,9 @@ chrome.runtime.onInstalled.addListener(() => {
  */
 const sendTabsMessage = (message) => {
   // send requestStatus to every active tab
-  chrome.tabs.query({}, (tabs) => {
+  browserApi.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
-      if (tab?.url?.includes(message.gashaId)) chrome.tabs.sendMessage(tab.id, message);
+      if (tab?.url?.includes(message.gashaId)) browserApi.tabs.sendMessage(tab.id, message);
     });
   });
 };
@@ -205,10 +207,10 @@ const buildNewSummonsStorage = (storage, result, summonType, summonAmount, gasha
  * @param {Function} sendResponse - The response callback function.
  * @returns {boolean} - Whether the response callback function will be called asynchronously.
  */
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+browserApi.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   switch (message.action) {
     case 'USER_SINGLE_SUMMON': {
-      const storage = await chrome.storage.local.get();
+      const storage = await browserApi.storage.local.get();
       const { rates } = storage.fetchedUrls[message.gashaId];
 
       const summonRates = calculateRates(rates);
@@ -216,7 +218,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       const result = summon(cardsCategory, summonRates);
 
       const newStorage = buildNewSummonsStorage(storage, [result], 'totalSingleSummons', 5, message.gashaId);
-      await chrome.storage.local.set({ ...newStorage });
+      await browserApi.storage.local.set({ ...newStorage });
 
       sendResponse({ result: [result] });
       sendTabsMessage({ action: 'BACKGROUND_SINGLE_SUMMON', result: [result], gashaId: message.gashaId });
@@ -225,14 +227,14 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     }
 
     case 'USER_MULTI_SUMMON': {
-      const storage = await chrome.storage.local.get();
+      const storage = await browserApi.storage.local.get();
       const { rates } = storage.fetchedUrls[message.gashaId];
       const summonRates = calculateRates(rates);
       const cardsCategory = getCardsByCategory(storage.fetchedUrls[message.gashaId]);
       const result = multiSummon(cardsCategory, summonRates);
 
       const newStorage = buildNewSummonsStorage(storage, result, 'totalMultiSummons', 50, message.gashaId);
-      await chrome.storage.local.set({ ...newStorage });
+      await browserApi.storage.local.set({ ...newStorage });
 
       sendResponse({ ...result });
       sendTabsMessage({ action: 'BACKGROUND_MULTI_SUMMON', result, gashaId: message.gashaId });
@@ -241,9 +243,9 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     }
 
     case 'USER_RESET_SUMMONS': {
-      const storage = await chrome.storage.local.get();
+      const storage = await browserApi.storage.local.get();
       const newStorage = { ...storage, [message.gashaId]: { ...initStorageSummon } };
-      await chrome.storage.local.set({ ...newStorage });
+      await browserApi.storage.local.set({ ...newStorage });
 
       sendResponse({ success: true });
       sendTabsMessage({ action: 'BACKGROUND_RESET_SUMMONS', gashaId: message.gashaId });
@@ -269,14 +271,14 @@ const fetchedUrls = {};
  * Intercepts and fetches data from the specified URL.
  * @param {Object} details - The details object.
  */
-chrome.webRequest.onBeforeRequest.addListener(
+browserApi.webRequest.onBeforeRequest.addListener(
   async (details) => {
     const url = new URL(details.url);
     const gashaId = url.pathname.split('/').pop();
 
     if (fetchedUrls[gashaId]) {
       setTimeout(() => {
-        chrome.storage.local.set({
+        browserApi.storage.local.set({
           ...initStorage,
           fetchedUrls: { ...fetchedUrls },
           [gashaId]: { ...initStorageSummon },
@@ -297,7 +299,7 @@ chrome.webRequest.onBeforeRequest.addListener(
           sendTabsMessage({
             action: 'REQUEST_INTERCEPTED_GASHA', details, data, gashaId,
           });
-          chrome.storage.local.set({
+          browserApi.storage.local.set({
             ...initStorage,
             fetchedUrls: { ...fetchedUrls },
             [gashaId]: { ...initStorageSummon },
