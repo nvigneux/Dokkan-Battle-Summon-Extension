@@ -24,7 +24,8 @@
     "default_title": "Dokkan Battle Summon Extension"
   },
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["background.js"],
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
