@@ -1,3 +1,5 @@
+import browser from 'webextension-polyfill';
+
 const browserApi = (typeof browser !== 'undefined') ? browser : chrome;
 
 /* eslint-disable camelcase */
