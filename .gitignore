@@ -10,7 +10,6 @@
 
 # production
 /build
-/public/polyfill
 
 # misc
 .DS_Store
