@@ -14,6 +14,8 @@ const LOCALE_DOMAIN = {
 };
 const BANNED_PORTALS = ['Invocation "Rituel mystérieux"', '不思議な儀式ガシャ'];
 
+const browserApi = (typeof browser !== 'undefined') ? browser : chrome;
+
 function App() {
   const [locale, setLocale] = useState(GLO);
 
@@ -47,7 +49,7 @@ function App() {
    * @param {string} id - The ID of the tab.
    */
   const handleTabLink = (id) => {
-    chrome.tabs.create({ active: true, url: `${LOCALE_DOMAIN[locale]}/summon/${id}` });
+    browserApi.tabs.create({ active: true, url: `${LOCALE_DOMAIN[locale]}/summon/${id}` });
   };
 
   /**
