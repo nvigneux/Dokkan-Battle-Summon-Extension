@@ -1,4 +1,3 @@
-import browser from 'webextension-polyfill';
 import { useEffect, useState } from 'react';
 import './App.css';
 
