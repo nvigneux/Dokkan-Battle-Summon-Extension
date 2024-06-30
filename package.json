@@ -25,7 +25,8 @@
     "build-zip": "react-scripts build && cd build && zip -r ../build.zip ./* && cd ..",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "cy:open": "cypress open"
   },
   "eslintConfig": {
     "extends": [
@@ -48,6 +49,7 @@
   "devDependencies": {
     "@eslint/compat": "^1.0.1",
     "@eslint/js": "^9.3.0",
+    "cypress": "^13.12.0",
     "globals": "^15.3.0",
     "webextension-polyfill": "^0.12.0"
   }
