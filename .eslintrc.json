@@ -2,9 +2,7 @@
   "env": {
     "es2021": true,
     "browser": true,
-    "webextensions": true,
-    "mocha": true,
-    "cypress/globals": true
+    "webextensions": true
   },
   "extends": [
     "plugin:react/recommended",
