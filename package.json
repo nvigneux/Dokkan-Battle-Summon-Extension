@@ -14,6 +14,7 @@
     "eslint-plugin-react": "^7.28.0",
     "eslint-plugin-react-hooks": "^4.3.0",
     "eslint-plugin-react-refresh": "^0.3.4",
+    "playwright": "^1.45.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scripts": "^5.0.1",
@@ -25,7 +26,8 @@
     "build-zip": "react-scripts build && cd build && zip -r ../build.zip ./* && cd ..",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "tests": "playwright test --ui"
   },
   "eslintConfig": {
     "extends": [
@@ -48,6 +50,8 @@
   "devDependencies": {
     "@eslint/compat": "^1.0.1",
     "@eslint/js": "^9.3.0",
+    "@playwright/test": "^1.45.0",
+    "@types/node": "^20.14.9",
     "globals": "^15.3.0",
     "webextension-polyfill": "^0.12.0"
   }
