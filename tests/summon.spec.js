@@ -1,19 +1,15 @@
 // @ts-check
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./fixtures/load-extension');
 
-test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
+test('should check if extension buttons are loaded', async ({ page }) => {
+  await page.goto('https://jpn.dbz-dokkanbattle.com/summon/1445');
 
-  // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/Playwright/);
-});
+  const buttonConsent = await page.getByLabel('Consent', { exact: true });
+  await buttonConsent.click();
 
-test('get started link', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
+  const singleButton = await page.locator('.summon-button__single').first();
+  const multiButton = await page.locator('.summon-button__multi').first();
 
-  // Click the get started link.
-  await page.getByRole('link', { name: 'Get started' }).click();
-
-  // Expects page to have a heading with the name of Installation.
-  await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
+  expect(singleButton).toBeTruthy();
+  expect(multiButton).toBeTruthy();
 });
