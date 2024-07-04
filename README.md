@@ -4,6 +4,12 @@
 
 **Dokkan Battle Summon Extension** is a Chrome extension that add the ability to simulate summons on the site Dokkan Battle FR.
 
+## Download
+
+The extension can be downloaded from the following platforms:
+- [Chrome Web Store - Dokkan Battle Summon Extension](https://chromewebstore.google.com/detail/dokkan-battle-summon-exte/nfbeiohjkojffmlcaidmjjnokhbpkphn)
+- [Firefox Add-ons - Dokkan Battle Summon Extension](https://addons.mozilla.org/fr/firefox/addon/dokkan-battle-summon-extension/)
+
 ## Features
 
 - Add the summon buttons, multi or single
