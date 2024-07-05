@@ -8,18 +8,12 @@ test.beforeEach(async ({ page }) => {
   await buttonConsent.click();
 });
 
-/**
- * Clicks the specified button and checks if it has been successfully clicked.
- * If the button is not clicked, it recursively calls itself until the button is clicked.
- * @param {import('playwright/test').ElementHandle} button - The button element to be clicked.
- * @returns {Promise<void>} - A promise that resolves when the button is successfully clicked.
- */
-const clickAndCheck = async (button) => {
+const clickAndCheck = async (button, clickCount) => {
   await button.click();
   // @ts-ignore
   const clicked = await button.evaluate((el) => (el).classList.contains('summon-button__clicked'));
   if (!clicked) {
-    await clickAndCheck(button);
+    await clickAndCheck(button, clickCount + 1);
   }
 };
 
@@ -37,7 +31,7 @@ test('should Single Summon on banner', async ({ page }) => {
 
   const summonSingleButton = await page.getByTestId(`button-single-${SUMMON_ID}`);
   // @ts-ignore
-  await clickAndCheck(summonSingleButton);
+  await clickAndCheck(summonSingleButton, 1);
   await page.waitForTimeout(1000); // wait for the summon cards display
 
   const resultSummon = await page.getByTestId('summon-result').locator('.card');
@@ -52,8 +46,7 @@ test('should Multi Summon on banner', async ({ page }) => {
   expect(summonButtons).toHaveCount(2);
 
   const summonMultiButton = await page.getByTestId(`button-multi-${SUMMON_ID}`);
-  // @ts-ignore
-  await clickAndCheck(summonMultiButton);
+  await clickAndCheck(summonMultiButton, 1);
   await page.waitForTimeout(1000); // wait for the summon cards display
 
   const resultSummon = await page.getByTestId('summon-result').locator('.card');
@@ -61,4 +54,27 @@ test('should Multi Summon on banner', async ({ page }) => {
 
   const ds = await page.locator('.summon-stats__ds').first();
   expect(ds).toContainText('50');
+});
+
+test('should reset summons', async ({ page }) => {
+  const summonButtons = await page.getByTestId('summon-buttons').locator('button');
+  expect(summonButtons).toHaveCount(2);
+
+  const summonSingleButton = await page.getByTestId(`button-single-${SUMMON_ID}`);
+  // @ts-ignore
+  await clickAndCheck(summonSingleButton, 1);
+  await page.waitForTimeout(1000); // wait for the summon cards display
+
+  const resultSummon = await page.getByTestId('summon-result').locator('.card');
+  expect(resultSummon).toHaveCount(1);
+
+  const ds = await page.locator('.summon-stats__ds').first();
+  expect(ds).toContainText('5');
+
+  const resetButton = await page.getByTestId('summon-button-reset');
+  resetButton.click();
+  await page.waitForTimeout(1000); // wait for reset to complete
+
+  expect(resultSummon).toHaveCount(0);
+  expect(ds).toContainText('0');
 });
