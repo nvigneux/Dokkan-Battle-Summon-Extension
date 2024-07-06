@@ -111,3 +111,30 @@ test('should multi summon many times on banner', async ({ page }) => {
   const ds = await page.locator('.summon-stats__ds').first();
   expect(ds).toContainText('1000');
 });
+
+test('should summon many single & multi on banner and reset', async ({ page }) => {
+  const summonButtons = await page.getByTestId('summon-buttons').locator('button');
+  expect(summonButtons).toHaveCount(2);
+
+  const summonSingleButton = await page.getByTestId(`button-single-${SUMMON_ID}`);
+  const summonMultiButton = await page.getByTestId(`button-multi-${SUMMON_ID}`);
+
+  await clickMultipleTimes(summonMultiButton, 4);
+  await clickMultipleTimes(summonSingleButton, 4);
+
+  const resultSummon = await page.getByTestId('summon-result').locator('.card');
+  expect(resultSummon).toHaveCount(1);
+
+  await clickMultipleTimes(summonMultiButton, 2);
+  await page.waitForTimeout(1000); // wait for the summon cards display
+
+  const ds = await page.locator('.summon-stats__ds').first();
+  expect(ds).toContainText('270');
+
+  const resetButton = await page.getByTestId('summon-button-reset');
+  resetButton.click();
+  await page.waitForTimeout(1000); // wait for reset to complete
+
+  expect(resultSummon).toHaveCount(0);
+  expect(ds).toContainText('0');
+});
