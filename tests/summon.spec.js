@@ -98,3 +98,16 @@ test('should single summon many times on banner', async ({ page }) => {
   const ds = await page.locator('.summon-stats__ds').first();
   expect(ds).toContainText('100');
 });
+
+test('should multi summon many times on banner', async ({ page }) => {
+  const summonButtons = await page.getByTestId('summon-buttons').locator('button');
+  expect(summonButtons).toHaveCount(2);
+
+  const summonMultiButton = await page.getByTestId(`button-multi-${SUMMON_ID}`);
+
+  await clickMultipleTimes(summonMultiButton, 20);
+  await page.waitForTimeout(1000); // wait for the summon cards display
+
+  const ds = await page.locator('.summon-stats__ds').first();
+  expect(ds).toContainText('1000');
+});
