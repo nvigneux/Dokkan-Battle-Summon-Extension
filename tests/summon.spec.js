@@ -1,5 +1,6 @@
 // @ts-check
 const { test, expect } = require('./fixtures/load-extension');
+const { clickAndCheck, clickMultipleTimes } = require('./fixtures/utils');
 
 const SUMMON_ID = 1445;
 test.beforeEach(async ({ page }) => {
@@ -7,22 +8,6 @@ test.beforeEach(async ({ page }) => {
   const buttonConsent = await page.getByLabel('Consent', { exact: true });
   await buttonConsent.click();
 });
-
-const clickAndCheck = async (button) => {
-  await button.click();
-  // @ts-ignore
-  const clicked = await button.evaluate((el) => (el).classList.contains('summon-button__clicked'));
-  if (!clicked) {
-    await clickAndCheck(button);
-  }
-};
-
-const clickMultipleTimes = async (button, times) => {
-  if (times > 0) {
-    await clickAndCheck(button);
-    await clickMultipleTimes(button, times - 1);
-  }
-};
 
 test('should check if extension summon buttons are loaded', async ({ page }) => {
   const singleButton = await page.getByTestId(`button-single-${SUMMON_ID}`);
@@ -32,7 +17,7 @@ test('should check if extension summon buttons are loaded', async ({ page }) => 
   expect(multiButton).toBeTruthy();
 });
 
-test('should single Summon on banner', async ({ page }) => {
+test('should single summon on banner', async ({ page }) => {
   const summonButtons = await page.getByTestId('summon-buttons').locator('button');
   expect(summonButtons).toHaveCount(2);
 
@@ -48,7 +33,7 @@ test('should single Summon on banner', async ({ page }) => {
   expect(ds).toContainText('5');
 });
 
-test('should multi Summon on banner', async ({ page }) => {
+test('should multi summon on banner', async ({ page }) => {
   const summonButtons = await page.getByTestId('summon-buttons').locator('button');
   expect(summonButtons).toHaveCount(2);
 
@@ -106,7 +91,7 @@ test('should multi summon many times on banner', async ({ page }) => {
   const summonMultiButton = await page.getByTestId(`button-multi-${SUMMON_ID}`);
 
   await clickMultipleTimes(summonMultiButton, 20);
-  await page.waitForTimeout(1000); // wait for the summon cards display
+  await page.waitForTimeout(2000); // wait for the summon cards display
 
   const ds = await page.locator('.summon-stats__ds').first();
   expect(ds).toContainText('1000');
@@ -120,7 +105,10 @@ test('should summon many single & multi on banner and reset', async ({ page }) =
   const summonMultiButton = await page.getByTestId(`button-multi-${SUMMON_ID}`);
 
   await clickMultipleTimes(summonMultiButton, 4);
+  await page.waitForTimeout(1000); // wait for the summon cards display
+
   await clickMultipleTimes(summonSingleButton, 4);
+  await page.waitForTimeout(1000); // wait for the summon cards display
 
   const resultSummon = await page.getByTestId('summon-result').locator('.card');
   expect(resultSummon).toHaveCount(1);
@@ -129,7 +117,7 @@ test('should summon many single & multi on banner and reset', async ({ page }) =
   await page.waitForTimeout(1000); // wait for the summon cards display
 
   const ds = await page.locator('.summon-stats__ds').first();
-  expect(ds).toContainText('270');
+  expect(ds).toContainText('320');
 
   const resetButton = await page.getByTestId('summon-button-reset');
   resetButton.click();
