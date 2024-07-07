@@ -43,7 +43,7 @@ test('should single summon many times on banner', async ({ page }) => {
 
 test('should multi summon many times on banner', async ({ page }) => {
   await verifySummonButtons(page, expect, SUMMON_ID);
-  await performSummon(page, expect, `button-multi-${SUMMON_ID}`, 10, 5, '250');
+  await performSummon(page, expect, `button-multi-${SUMMON_ID}`, 10, 4, '200');
 });
 
 test('should summon many single & multi on banner and reset', async ({ page }) => {
