@@ -1,128 +1,57 @@
 // @ts-check
-const { test, expect } = require('./fixtures/load-extension');
-const { clickAndCheck, clickMultipleTimes } = require('./fixtures/utils');
+// Fixtures
+const { test, expect } = require('./fixtures/loadExtension');
+// Helpers
+const {
+  navigateToSummonPage, verifySummonButtons, performSummon, resetSummon,
+} = require('./supports/helpers');
 
+// Constants
 const SUMMON_ID = 1445;
+
+// Tests
 test.beforeEach(async ({ page }) => {
-  await page.goto(`https://jpn.dbz-dokkanbattle.com/summon/${SUMMON_ID}`);
-  const buttonConsent = await page.getByLabel('Consent', { exact: true });
-  await buttonConsent.click();
+  await navigateToSummonPage(page, SUMMON_ID);
 });
 
+// Test cases
 test('should check if extension summon buttons are loaded', async ({ page }) => {
-  const singleButton = await page.getByTestId(`button-single-${SUMMON_ID}`);
-  const multiButton = await page.getByTestId(`button-multi-${SUMMON_ID}`);
-
-  expect(singleButton).toBeTruthy();
-  expect(multiButton).toBeTruthy();
+  await verifySummonButtons(page, expect, SUMMON_ID);
 });
 
 test('should single summon on banner', async ({ page }) => {
-  const summonButtons = await page.getByTestId('summon-buttons').locator('button');
-  expect(summonButtons).toHaveCount(2);
-
-  const summonSingleButton = await page.getByTestId(`button-single-${SUMMON_ID}`);
-  // @ts-ignore
-  await clickAndCheck(summonSingleButton);
-  await page.waitForTimeout(1000); // wait for the summon cards display
-
-  const resultSummon = await page.getByTestId('summon-result').locator('.card');
-  expect(resultSummon).toHaveCount(1);
-
-  const ds = await page.locator('.summon-stats__ds').first();
-  expect(ds).toContainText('5');
+  await verifySummonButtons(page, expect, SUMMON_ID);
+  await performSummon(page, expect, `button-single-${SUMMON_ID}`, 1, 1, '5');
 });
 
 test('should multi summon on banner', async ({ page }) => {
-  const summonButtons = await page.getByTestId('summon-buttons').locator('button');
-  expect(summonButtons).toHaveCount(2);
-
-  const summonMultiButton = await page.getByTestId(`button-multi-${SUMMON_ID}`);
-  await clickAndCheck(summonMultiButton);
-  await page.waitForTimeout(1000); // wait for the summon cards display
-
-  const resultSummon = await page.getByTestId('summon-result').locator('.card');
-  expect(resultSummon).toHaveCount(10);
-
-  const ds = await page.locator('.summon-stats__ds').first();
-  expect(ds).toContainText('50');
+  await verifySummonButtons(page, expect, SUMMON_ID);
+  await performSummon(page, expect, `button-multi-${SUMMON_ID}`, 10, 1, '50');
 });
 
 test('should reset summons', async ({ page }) => {
-  const summonButtons = await page.getByTestId('summon-buttons').locator('button');
-  expect(summonButtons).toHaveCount(2);
+  await verifySummonButtons(page, expect, SUMMON_ID);
+  await performSummon(page, expect, `button-single-${SUMMON_ID}`, 1, 1, '5');
 
-  const summonSingleButton = await page.getByTestId(`button-single-${SUMMON_ID}`);
-  // @ts-ignore
-  await clickAndCheck(summonSingleButton);
-  await page.waitForTimeout(1000); // wait for the summon cards display
-
-  const resultSummon = await page.getByTestId('summon-result').locator('.card');
-  expect(resultSummon).toHaveCount(1);
-
-  const ds = await page.locator('.summon-stats__ds').first();
-  expect(ds).toContainText('5');
-
-  const resetButton = await page.getByTestId('summon-button-reset');
-  resetButton.click();
-  await page.waitForTimeout(1000); // wait for reset to complete
-
-  expect(resultSummon).toHaveCount(0);
-  expect(ds).toContainText('0');
+  await resetSummon(page, expect);
 });
 
 test('should single summon many times on banner', async ({ page }) => {
-  const summonButtons = await page.getByTestId('summon-buttons').locator('button');
-  expect(summonButtons).toHaveCount(2);
-
-  const summonMultiButton = await page.getByTestId(`button-single-${SUMMON_ID}`);
-
-  await clickMultipleTimes(summonMultiButton, 20);
-  await page.waitForTimeout(1000); // wait for the summon cards display
-
-  const ds = await page.locator('.summon-stats__ds').first();
-  expect(ds).toContainText('100');
+  await verifySummonButtons(page, expect, SUMMON_ID);
+  await performSummon(page, expect, `button-single-${SUMMON_ID}`, 1, 4, '20');
 });
 
 test('should multi summon many times on banner', async ({ page }) => {
-  const summonButtons = await page.getByTestId('summon-buttons').locator('button');
-  expect(summonButtons).toHaveCount(2);
-
-  const summonMultiButton = await page.getByTestId(`button-multi-${SUMMON_ID}`);
-
-  await clickMultipleTimes(summonMultiButton, 20);
-  await page.waitForTimeout(2000); // wait for the summon cards display
-
-  const ds = await page.locator('.summon-stats__ds').first();
-  expect(ds).toContainText('1000');
+  await verifySummonButtons(page, expect, SUMMON_ID);
+  await performSummon(page, expect, `button-multi-${SUMMON_ID}`, 10, 5, '250');
 });
 
 test('should summon many single & multi on banner and reset', async ({ page }) => {
-  const summonButtons = await page.getByTestId('summon-buttons').locator('button');
-  expect(summonButtons).toHaveCount(2);
+  await verifySummonButtons(page, expect, SUMMON_ID);
 
-  const summonSingleButton = await page.getByTestId(`button-single-${SUMMON_ID}`);
-  const summonMultiButton = await page.getByTestId(`button-multi-${SUMMON_ID}`);
+  await performSummon(page, expect, `button-multi-${SUMMON_ID}`, 10, 2, '100');
+  await performSummon(page, expect, `button-single-${SUMMON_ID}`, 1, 4, '120');
+  await performSummon(page, expect, `button-multi-${SUMMON_ID}`, 10, 2, '220');
 
-  await clickMultipleTimes(summonMultiButton, 4);
-  await page.waitForTimeout(1000); // wait for the summon cards display
-
-  await clickMultipleTimes(summonSingleButton, 4);
-  await page.waitForTimeout(1000); // wait for the summon cards display
-
-  const resultSummon = await page.getByTestId('summon-result').locator('.card');
-  expect(resultSummon).toHaveCount(1);
-
-  await clickMultipleTimes(summonMultiButton, 2);
-  await page.waitForTimeout(1000); // wait for the summon cards display
-
-  const ds = await page.locator('.summon-stats__ds').first();
-  expect(ds).toContainText('320');
-
-  const resetButton = await page.getByTestId('summon-button-reset');
-  resetButton.click();
-  await page.waitForTimeout(1000); // wait for reset to complete
-
-  expect(resultSummon).toHaveCount(0);
-  expect(ds).toContainText('0');
+  await resetSummon(page, expect);
 });
