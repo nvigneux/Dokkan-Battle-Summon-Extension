@@ -9,6 +9,8 @@ const { clickMultipleTimes } = require('./utils');
  */
 const navigateToSummonPage = async (page, summonId) => {
   await page.goto(`https://jpn.dbz-dokkanbattle.com/summon/${summonId}`);
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(2000); // wait for page loading
   const buttonConsent = await page.getByLabel('Consent', { exact: true });
   await buttonConsent.click();
 };
