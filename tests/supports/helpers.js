@@ -80,9 +80,22 @@ const resetSummon = async (page, expect) => {
   await expect(ds).toContainText('0');
 };
 
+/**
+ * Checks the response data from a fetch request.
+ * @param {Promise<Response>} responsePromise - The promise that resolves to the fetch response.
+ * @param {Function} expect - The expect function from the testing framework.
+ * @returns {Promise<void>} - A promise that resolves when the response data is checked.
+ */
+const checkResponseData = async (responsePromise, expect) => {
+  const response = await responsePromise;
+  const data = await response.json();
+  await expect(data.every((card) => typeof card === 'object')).toBe(true);
+};
+
 module.exports = {
   navigateToSummonPage,
   verifySummonButtons,
   performSummon,
   resetSummon,
+  checkResponseData,
 };
