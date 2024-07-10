@@ -7,3 +7,8 @@ test.beforeEach(async ({ page, extensionId }) => {
 test('popup page', async ({ page }) => {
   await expect(page.locator('body')).toHaveText('Dokkan Battle Summons');
 });
+
+test('should show skeleton banner', async ({ page }) => {
+  const cardPortalSkeleton = await page.getByTestId('card-portal-skeleton');
+  await expect(cardPortalSkeleton).toHaveCount(6);
+});
