@@ -1,4 +1,8 @@
 const { test, expect } = require('./fixtures/loadExtension');
+const { checkResponseData } = require('./supports/helpers');
+
+const JPN_API = 'https://jpn.dbz-dokkanbattle.com/api/gashas/Gasha::StoneGasha';
+const GLO_API = 'https://dbz-dokkanbattle.com/api/gashas/Gasha::StoneGasha';
 
 test.beforeEach(async ({ page, extensionId }) => {
   await page.goto(`chrome-extension://${extensionId}/index.html`);
@@ -19,4 +23,11 @@ test('should change locale of banners', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Japan flag' }).click();
   await expect(page.getByRole('button', { name: 'Global flag' })).toBeVisible();
+});
+
+test('should intercept fetch on locale change', async ({ page }) => {
+  const response = page.waitForResponse(JPN_API);
+
+  await page.getByRole('button', { name: 'Global flag' }).click();
+  await checkResponseData(response, expect);
 });
