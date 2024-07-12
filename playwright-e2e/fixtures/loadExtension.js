@@ -2,13 +2,14 @@ const { test, chromium } = require('@playwright/test');
 const path = require('path');
 
 const testFixture = test.extend({
-  // ! Warning ! -> {} is required
+  // ! Warning ! -> {} empty is required
   // eslint-disable-next-line no-empty-pattern
   context: async ({}, use) => {
     const pathToExtension = path.join(__dirname, '../../build');
     const context = await chromium.launchPersistentContext('', {
       headless: false,
       args: [
+        '--headless=new', // docs/chrome-extensions#headless-mode
         `--disable-extensions-except=${pathToExtension}`,
         `--load-extension=${pathToExtension}`,
       ],
