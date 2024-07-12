@@ -31,3 +31,20 @@ test('should intercept fetch on locale change', async ({ page }) => {
   await page.getByRole('button', { name: 'Global flag' }).click();
   await checkResponseData(response, expect);
 });
+
+test('should show 6 global banner', async ({ page }) => {
+  const response = page.waitForResponse(GLO_API);
+  await checkResponseData(response, expect);
+  const cardPortal = await page.getByTestId('card-portal');
+  await expect(cardPortal).toHaveCount(6);
+});
+
+test('should show 6 jp banner', async ({ page }) => {
+  await page.getByRole('button', { name: 'Global flag' }).click();
+
+  const response = page.waitForResponse(JPN_API);
+  await checkResponseData(response, expect);
+
+  const cardPortal = await page.getByTestId('card-portal');
+  await expect(cardPortal).toHaveCount(6);
+});
