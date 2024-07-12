@@ -48,3 +48,16 @@ test('should show 6 jp banner', async ({ page }) => {
   const cardPortal = await page.getByTestId('card-portal');
   await expect(cardPortal).toHaveCount(6);
 });
+
+test('should allow clicking on a banner', async ({ page, context }) => {
+  const response = page.waitForResponse(GLO_API);
+  await checkResponseData(response, expect);
+
+  const cardPortal = await page.getByTestId('card-portal').first();
+  await cardPortal.click();
+
+  await page.waitForTimeout(2000); // wait for page loading
+  const pages = await context.pages();
+  const isSummonPage = pages.some((_page) => _page.url().includes('https://dbz-dokkanbattle.com/summon'));
+  await expect(isSummonPage).toBeTruthy();
+});
