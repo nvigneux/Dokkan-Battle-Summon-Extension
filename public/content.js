@@ -81,6 +81,7 @@ const getCardBackground = (element, rarity) => `../../../../img/layout/character
 const createSection = (id, title) => {
   const section = document.createElement('div');
   section.id = id;
+  section.setAttribute('data-testid', id);
   section.classList.add('section');
   section.innerHTML = `
       <img class="section__dragon-ball" src="../../../img/ui/dragon-ball-loader.png" alt="dragon-ball-loader">
@@ -122,6 +123,7 @@ const initId = (id, target) => new Promise((resolve, reject) => {
   if (!document.getElementById(id)) {
     const summonList = document.createElement('div');
     summonList.id = id;
+    summonList.setAttribute('data-testid', id);
     summonList.classList.add('summon-list');
     target.appendChild(summonList);
     resolve();
@@ -134,9 +136,10 @@ const initSummonId = (id, target) => new Promise((resolve, reject) => {
   if (!document.getElementById(id)) {
     const summonList = document.createElement('div');
     summonList.id = id;
+    summonList.setAttribute('data-testid', id);
     summonList.innerHTML = `
-      <div id="section-${id}"></div>
-      <div id="summon-${id}"></div>
+      <div id="section-${id}" data-testid="${id}"></div>
+      <div id="summon-${id}" data-testid="${id}"></div>
     `;
     target.appendChild(summonList);
     resolve();
@@ -240,6 +243,7 @@ const initDisplaySummonList = async (gashaId) => {
 const createSummonButton = (gashaId, buttonText, action) => {
   const button = document.createElement('button');
   button.id = `button-${action}-${gashaId}`;
+  button.setAttribute('data-testid', `button-${action}-${gashaId}`);
   button.innerHTML = buttonText;
 
   const url = chrome.runtime.getURL(`assets/${action}_summon.webp`);
@@ -248,6 +252,7 @@ const createSummonButton = (gashaId, buttonText, action) => {
   button.classList.add('summon-button', `summon-button__${action}`);
   button.onclick = () => {
     chrome.runtime.sendMessage({ action: `USER_${action.toUpperCase()}_SUMMON`, gashaId });
+    button.classList.add('summon-button__clicked');
   };
   return button;
 };
@@ -338,17 +343,17 @@ const displaySummonStats = (totalMulti, totalSingle, totalDs) => {
   summonStats.innerHTML = `
     <div class="summon-stats__wrapper">
       <div class="summon-stats">
-        <div class="summon-stats__row">
+        <div class="summon-stats__row" data-testid="summon-single-total">
           <span class="summon-stats__title">Single: </span>
           <span class="summon-stats__value">${totalSingle}</span>
         </div>
-        <div class="summon-stats__row">
+        <div class="summon-stats__row" data-testid="summon-multi-total">
           <span class="summon-stats__title">Multi: </span>
           <span class="summon-stats__value">${totalMulti}</span>
         </div>
       </div>
       <div class="summon-stats">
-        <div class="summon-stats__row" id="summon-button-reset">
+        <div class="summon-stats__row" id="summon-button-reset" data-testid="summon-button-reset">
         </div>
         <div class="summon-stats__row">
           <img src="${dsImg}" class="summon-stats__img" />
@@ -368,6 +373,7 @@ const displaySummonResetButton = (gashaId) => {
   const buttonReset = document.createElement('button');
   buttonReset.innerHTML = 'Reset';
   buttonReset.id = 'button-reset';
+  buttonReset.setAttribute('data-testid', 'button-reset');
   buttonReset.classList.add('summon-button', 'summon-button__reset');
   buttonReset.onclick = () => {
     chrome.runtime.sendMessage({ action: 'USER_RESET_SUMMONS', gashaId });

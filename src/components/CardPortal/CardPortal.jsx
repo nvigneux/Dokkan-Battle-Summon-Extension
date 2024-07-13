@@ -18,9 +18,10 @@ function CardPortal({
 }) {
   return (
     <button
+      key={gasha.id}
+      data-testid="card-portal"
       type="button"
       onClick={() => handleTabLink(gasha.id)}
-      key={gasha.id}
       className="card"
       title={gasha.name}
     >
