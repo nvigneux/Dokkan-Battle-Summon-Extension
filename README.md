@@ -2,7 +2,9 @@
 
 ## Description
 
-**Dokkan Battle Summon Extension** is a Chrome extension that add the ability to simulate summons on the site Dokkan Battle FR.
+**Dokkan Battle Summon Extension** is a Chrome extension that adds the ability to simulate summons on the Japanese version of the Dokkan Battle site.
+
+> **Note:** As of the latest version, only the Japanese (JP) version is supported. The Global version has moved to server-side rendering (SSR), which breaks the API access used by the extension.
 
 ## Download
 
@@ -15,6 +17,7 @@ The extension can be downloaded from the following platforms:
 - Add the summon buttons, multi or single
 - Display a counter for the Dragon Stones used
 - Show the list of SSRs summoned, featured and non-featured
+- Japanese (JP) version only support
 
 ## Screenshots
 
@@ -74,7 +77,7 @@ It correctly bundles React in production mode and optimizes the build for the be
 
 ### `npm eject`
 
-**Note:** This is a one-way operation. Once you `eject`, you can’t go back!
+**Note:** This is a one-way operation. Once you `eject`, you can't go back!
 
 ## Learn More
 
