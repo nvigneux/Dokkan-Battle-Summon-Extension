@@ -6,19 +6,15 @@ import CardPortal from './components/CardPortal/CardPortal';
 import CardPortalSkeleton from './components/CardPortal/CardPortal.skeleton';
 
 // Constants
-const GLO = 'global';
 const JPN = 'jpn';
 const LOCALE_DOMAIN = {
-  [GLO]: 'https://dbz-dokkanbattle.com',
   [JPN]: 'https://jpn.dbz-dokkanbattle.com',
 };
-const BANNED_PORTALS = ['Invocation "Rituel mystérieux"', '不思議な儀式ガシャ'];
+const BANNED_PORTALS = ['不思議な儀式ガシャ'];
 
 const browserApi = (typeof browser !== 'undefined') ? browser : chrome;
 
 function App() {
-  const [locale, setLocale] = useState(GLO);
-
   const [isLoading, setIsLoading] = useState(true);
   const [gashas, setGashas] = useState([]);
 
@@ -49,48 +45,28 @@ function App() {
    * @param {string} id - The ID of the tab.
    */
   const handleTabLink = (id) => {
-    browserApi.tabs.create({ active: true, url: `${LOCALE_DOMAIN[locale]}/summon/${id}` });
-  };
-
-  /**
-   * Handles the locale change.
-   */
-  const handleLocale = () => {
-    setLocale((prevLocale) => (prevLocale === GLO ? JPN : GLO));
+    browserApi.tabs.create({ active: true, url: `${LOCALE_DOMAIN[JPN]}/summon/${id}` });
   };
 
   useEffect(() => {
     setGashas([]);
     setIsLoading(true);
 
-    fetch(`${LOCALE_DOMAIN[locale]}/api/gashas/Gasha::StoneGasha`)
+    fetch(`${LOCALE_DOMAIN[JPN]}/api/gashas/Gasha::StoneGasha`)
       .then((response) => response.json())
       .then((data) => {
         const activeGashas = getLastestGashas(data, 6);
         setGashas(activeGashas);
         setIsLoading(false);
       });
-  }, [locale]);
+  }, []);
 
   return (
     <div className="app">
       <header className="header">
         <div className="locale-space" />
         <h1 className="title">Dokkan Battle Summons</h1>
-        <button
-          type="button"
-          onClick={handleLocale}
-          className="locale-btn"
-          title={
-            locale === GLO
-              ? 'Switch to the Japanese version'
-              : 'Switch to the Global version'
-          }
-        >
-          {locale === GLO
-            ? <img src="assets/global-flag.webp" alt="Global flag" className={`flag-${locale}`} />
-            : <img src="assets/jpn-flag.webp" alt="Japan flag" className={`flag-${locale}`} />}
-        </button>
+        <div className="locale-space" />
       </header>
       <main className="main">
         {gashas?.length > 0 || !isLoading
@@ -99,7 +75,7 @@ function App() {
               key={gasha.id}
               gasha={gasha}
               handleTabLink={handleTabLink}
-              backgroundUrl={`${LOCALE_DOMAIN[locale]}/img/gashas/gashas_`}
+              backgroundUrl={`${LOCALE_DOMAIN[JPN]}/img/gashas/gashas_`}
             />
           )) : (
             Array.from({ length: 6 }).map((_, index) => (

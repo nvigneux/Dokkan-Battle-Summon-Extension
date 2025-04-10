@@ -47,39 +47,6 @@
   width: 2rem;
 }
 
-.locale-btn {
-  display: flex;
-  align-items: center;
-  height: 1.5rem;
-  width: 2rem;
-  justify-content: center;
-  border: none;
-  background: none;
-  position: relative;
-  top: 1px;
-  cursor: pointer;
-  transition: background 0.3s;
-  border-radius: 6px;
-}
-
-.locale-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.locale-btn:active {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.locale-btn .flag-global {
-  height: 1.25rem;
-  width: auto;
-}
-
-.locale-btn .flag-jpn {
-  height: 0.9rem;
-  width: auto;
-}
-
 .main {
   position: relative;
   display: flex;
