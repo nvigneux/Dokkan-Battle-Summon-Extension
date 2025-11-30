@@ -307,6 +307,6 @@ browserApi.webRequest.onBeforeRequest.addListener(
         });
     }
   },
-  { urls: ['*://dbz-dokkanbattle.com/api/gasha/*', '*://jpn.dbz-dokkanbattle.com/api/gasha/*'] },
+  { urls: ['*://jpn.dbz-dokkanbattle.com/api/gasha/*'] },
   ['requestBody'],
 );

@@ -1,7 +1,7 @@
 {
   "short_name": "Dokkan Battle Summon Extension",
   "name": "Dokkan Battle Summon Extension",
-  "description": "Dokkan Battle Summon Extension",
+  "description": "Dokkan Battle Summon Extension for Japanese version",
   "version": "1.4",
   "manifest_version": 3,
   "icons": { "16": "logo192.png", "48": "logo192.png", "128": "logo192.png" },
@@ -14,8 +14,6 @@
     "webRequest"
   ],
   "host_permissions": [
-    "*://dbz-dokkanbattle.com/*",
-    "*://dbz-dokkanbattle.com/summons/*",
     "*://jpn.dbz-dokkanbattle.com/*",
     "*://jpn.dbz-dokkanbattle.com/summons/*"
   ],
@@ -30,8 +28,6 @@
   "content_scripts": [
     {
       "matches": [
-        "*://dbz-dokkanbattle.com/*",
-        "*://dbz-dokkanbattle.com/summons/*",
         "*://jpn.dbz-dokkanbattle.com/*",
         "*://jpn.dbz-dokkanbattle.com/summons/*"
       ],
@@ -42,7 +38,7 @@
   "web_accessible_resources": [
     {
       "resources": ["*.webp"],
-      "matches": ["*://dbz-dokkanbattle.com/*", "*://jpn.dbz-dokkanbattle.com/*"]
+      "matches": ["*://jpn.dbz-dokkanbattle.com/*"]
     }
   ],
   "browser_specific_settings": {
