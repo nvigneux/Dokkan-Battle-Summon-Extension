@@ -12,6 +12,7 @@
 /build
 build.crx
 build.pem
+build.zip
 
 # misc
 .DS_Store
