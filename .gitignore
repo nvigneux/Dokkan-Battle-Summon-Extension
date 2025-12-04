@@ -12,6 +12,7 @@
 /build
 build.crx
 build.pem
+dist
 build.zip
 
 # misc
@@ -21,9 +22,16 @@ build.zip
 .env.test.local
 .env.production.local
 
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Vite
+.vite
+
 /test-results/
 /playwright-report/
 /blob-report/
