@@ -6,7 +6,7 @@ module.exports = {
     webextensions: true,
   },
   extends: ['plugin:react/recommended', 'airbnb'],
-  ignorePatterns: ['dist', 'build', '.eslintrc.cjs'],
+  ignorePatterns: ['build', '.eslintrc.cjs', 'playwright-report', 'test-results'],
   overrides: [
   ],
   parserOptions: {
