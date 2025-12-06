@@ -1,6 +1,5 @@
 const browserApi = (typeof browser !== 'undefined') ? browser : chrome;
 
-/* eslint-disable camelcase */
 /**
  * Initial storage object.
  * @type {Object}
